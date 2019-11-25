@@ -1,7 +1,7 @@
 #include "sphere.h"
 sphere::sphere() {}
 
-sphere::sphere(glm::vec3 cen, float r) : center(cen), radius(r) {}
+sphere::sphere(glm::vec3 cen, float r, Material* m) : center(cen), radius(r),mat(m) {}
 
 bool sphere::hit(const ray& r, float t_min, float t_max, hit_record& rec)const {
 	glm::vec3 oc = r.origin() - center;
@@ -17,6 +17,7 @@ bool sphere::hit(const ray& r, float t_min, float t_max, hit_record& rec)const {
 			rec.t = temp;
 			rec.p = r.point_at_parameter(rec.t);
 			rec.normal = (rec.p - center) / radius;
+			rec.mat_ptr = mat;
 			return true;
 		}
 		temp = (-b + sqrt(discriminant)) / a;
@@ -24,6 +25,7 @@ bool sphere::hit(const ray& r, float t_min, float t_max, hit_record& rec)const {
 			rec.t = temp;
 			rec.p = r.point_at_parameter(rec.t);
 			rec.normal = (rec.p - center) / radius;
+			rec.mat_ptr = mat;
 			return true;
 		}
 	}

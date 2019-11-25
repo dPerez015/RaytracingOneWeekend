@@ -11,6 +11,8 @@
 #include "hittable_list.h"
 #include "sphere.h"
 #include "SFC.h"
+#include "Lambertian.h"
+#include "Metal.h"
 
 sfc rng;
 
@@ -27,11 +29,17 @@ glm::vec3 random_in_unit_sphere() {
 	return p;
 }
 
-glm::vec3 color(const ray& r, hittable* world) {
+glm::vec3 color(const ray& r, hittable* world, int depth) {
 	hit_record rec;
-	if (world->hit(r, 0.0f, 10000.f, rec)) {
-		glm::vec3 target = rec.p + rec.normal + random_in_unit_sphere();
-		return 0.5f * color(ray(rec.p, target - rec.p),world);
+	if (world->hit(r, 0.001f, 10000.f, rec)) {
+		ray scattered;
+		glm::vec3 attenuation;
+		if (depth < 50 && rec.mat_ptr->scatter(r, rec, attenuation, scattered)) {
+			return attenuation * color(scattered, world, depth + 1);
+		}
+		else {
+			return glm::vec3(0, 0, 0);
+		}
 	}
 	else {
 		glm::vec3 normDir = glm::normalize(r.direction());
@@ -42,8 +50,8 @@ glm::vec3 color(const ray& r, hittable* world) {
 
 
 int main() {
-	int nx = 200;
-	int ny = 100;
+	int nx = 400;
+	int ny = 200;
 	int ns = 100;//num samples in each pixel
 
 	glm::vec3 lowerLeftCorner(-2.0, -1.0, -1.0);
@@ -52,10 +60,12 @@ int main() {
 	glm::vec3 origin(0.0,0.0,0.0);
 	Camera cam;
 
-	hittable* list[2];
-	list[0] = new sphere(glm::vec3(0, 0, -1), 0.5);
-	list[1] = new sphere(glm::vec3(0, -100.5, -1), 100);
-	hittable* world = new hittable_list(list, 2);
+	hittable* list[4];
+	list[0] = new sphere(glm::vec3(0, 0, -1), 0.5, new lambertian(glm::vec3(0.3, 0.3, 0.8)));
+	list[1] = new sphere(glm::vec3(0, -100.5, -1), 100, new lambertian(glm::vec3(0.8, 0.8, 0.0)));
+	list[2] = new sphere(glm::vec3(1, 0, -1), 0.5, new Metal(glm::vec3(0.8, 0.6, 0.2)));
+	list[3] = new sphere(glm::vec3(-1, 0, -1), 0.5, new Metal(glm::vec3(0.8, 0.8, 0.8)));
+	hittable* world = new hittable_list(list, 4);
 
 	rng.a = 0;
 	rng.b = 0;
@@ -78,7 +88,7 @@ int main() {
 				float u = float(i + random_double(&rng)) / float(nx);
 				float v = float(j + random_double(&rng)) / float(ny);
 				ray r = cam.get_ray(u, v);
-				col += color(r, world);
+				col += color(r, world,0);
 			}
 			col /= float(ns);
 			col = glm::vec3(sqrt(col.x), sqrt(col.y), sqrt(col.z));
@@ -94,8 +104,8 @@ int main() {
 	std::chrono::milliseconds time_span = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
 	std::cout << "I took " << time_span.count() << " milliseconds" <<std::endl;
 #else
-	std::chrono::nanoseconds time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1);
-	std::cout << "I took " << time_span.count() <<" nanoseconds" <<std::endl;
+	std::chrono::milliseconds time_span = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+	std::cout << "I took " << time_span.count() <<" milliseconds" <<std::endl;
 #endif
 	file.close();
 }

@@ -138,6 +138,9 @@
     <ClInclude Include="DirkRNG.h" />
     <ClInclude Include="hittable.h" />
     <ClInclude Include="hittable_list.h" />
+    <ClInclude Include="Lambertian.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="Metal.h" />
     <ClInclude Include="ray.h" />
     <ClInclude Include="SFC.h" />
     <ClInclude Include="sphere.h" />

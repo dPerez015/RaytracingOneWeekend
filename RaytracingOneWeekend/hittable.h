@@ -2,10 +2,13 @@
 #define HITTABLEH 
 #include "ray.h"
 
+class Material;
+
 struct  hit_record{
 	float t;
 	glm::vec3 p;
 	glm::vec3 normal;
+	Material* mat_ptr;
 };
 
 class hittable {
