@@ -5,33 +5,26 @@
 #include <glm/vec3.hpp>
 
 #include "ray.h"
+#include "hittable_list.h"
+#include "sphere.h"
+#include "SFC.h"
 
-float hit_sphere(const glm::vec3& center, float radius, const ray& r) {
-	glm::vec3 O_C = r.origin() - center;
-	float a = glm::dot(r.direction(), r.direction());
-	float b = 2.0f * glm::dot(O_C, r.direction());
-	float c = glm::dot(O_C, O_C) - radius * radius;
-	float discriminant = b * b - 4.0f * a * c;
-	
-	if (discriminant < 0) {
-		return -1.0f;
-	}
-	return ((-b - std::sqrt(discriminant)) / (2.0f * a));
+inline double random_double(sfc* d) {
+	uint64_t r = (*d)();
+	return r / (double)(d->MAXRAND);
 }
 
-glm::vec3 color(const ray& r) {
-	float t = hit_sphere(glm::vec3(0, 0, -1), 0.5, r);
-	if (t > 0.0f) {
-		glm::vec3 spaceRelativeToSphere = r.point_at_parameter(t) - glm::vec3(0, 0, -1);
-		glm::vec3 normal = glm::normalize(r.point_at_parameter(t) - glm::vec3(0, 0, -1));
-		return 0.5f * glm::vec3(normal.x + 1, normal.y + 1, normal.z + 1);
+glm::vec3 color(const ray& r, hittable* world) {
+	hit_record rec;
+	if (world->hit(r, 0.0f, 10000.f, rec)) {
+		return 0.5f * glm::vec3(rec.normal.x + 1, rec.normal.y + 1, rec.normal.z + 1);
 	}
-
-	glm::vec3 normDir = glm::normalize(r.direction());
-	t = 0.5f * (normDir.y + 1.0f); //[0,1]
-	return (1.0f - t) * glm::vec3(1.0, 1.0, 1.0) + t * glm::vec3(0.5, 0.7, 1.0); //higher ray direction -> less gray scale and more bluish color. LERP
+	else {
+		glm::vec3 normDir = glm::normalize(r.direction());
+		float t = 0.5f * (normDir.y + 1.0f); //[0,1]
+		return (1.0f - t) * glm::vec3(1.0, 1.0, 1.0) + t * glm::vec3(0.5, 0.7, 1.0); //higher ray direction -> less gray scale and more bluish color. LERP
+	}
 }
-
 
 
 int main() {
@@ -42,6 +35,12 @@ int main() {
 	glm::vec3 vertical(0.0, 2.0, 0.0);
 	glm::vec3 origin(0.0,0.0,0.0);
 
+	hittable* list[2];
+	list[0] = new sphere(glm::vec3(0, 0, -1), 0.5);
+	list[1] = new sphere(glm::vec3(0, -100.5, -1), 100);
+	hittable* world = new hittable_list(list, 2);
+
+	sfc rng;
 
 	std::ofstream file;
 	file.open("output.txt");
@@ -54,7 +53,8 @@ int main() {
 			float u = (float)i / (float)nx;
 			float v = (float)j / (float)ny;
 			ray r(origin, lowerLeftCorner + u * horizontal + v * vertical);
-			glm::vec3 col=color(r);
+
+			glm::vec3 col=color(r, world);
 			int ir = int(255.99 * col.x);
 			int ig = int(255.99 * col.y);
 			int ib = int(255.99 * col.z);
