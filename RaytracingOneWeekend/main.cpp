@@ -50,34 +50,44 @@ glm::vec3 color(const ray& r, hittable* world, int depth) {
 
 
 int main() {
-	int nx = 400;
-	int ny = 200;
+	//resolutiom
+	int nx = 200;
+	int ny = 100;
 	int ns = 100;//num samples in each pixel
 
+	//frustrum
 	glm::vec3 lowerLeftCorner(-2.0, -1.0, -1.0);
 	glm::vec3 horizontal(4.0, 0.0, 0.0);
 	glm::vec3 vertical(0.0, 2.0, 0.0);
 	glm::vec3 origin(0.0,0.0,0.0);
 	Camera cam;
 
+	//Scene
 	hittable* list[4];
 	list[0] = new sphere(glm::vec3(0, 0, -1), 0.5, new lambertian(glm::vec3(0.3, 0.3, 0.8)));
 	list[1] = new sphere(glm::vec3(0, -100.5, -1), 100, new lambertian(glm::vec3(0.8, 0.8, 0.0)));
-	list[2] = new sphere(glm::vec3(1, 0, -1), 0.5, new Metal(glm::vec3(0.8, 0.6, 0.2)));
-	list[3] = new sphere(glm::vec3(-1, 0, -1), 0.5, new Metal(glm::vec3(0.8, 0.8, 0.8)));
+	list[2] = new sphere(glm::vec3(1, 0, -1), 0.5, new Metal(glm::vec3(0.8, 0.2, 0.2),0.3));
+	list[3] = new sphere(glm::vec3(-1, 0, -1), 0.5, new Metal(glm::vec3(0.8, 0.8, 0.8),0.8));
 	hittable* world = new hittable_list(list, 4);
-
+	
+	//rng init
 	rng.a = 0;
 	rng.b = 0;
 	rng.c = 0;
 	rng.d= 0;
 
+	//output init
 	std::ofstream file;
 	file.open("output.txt");
 	file << "P3\n" << nx << " " << ny << "\n255\n";
-	
-	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
+
+	
+	//Time
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+	
+
+	//Render scene
 	for (int j = ny - 1; j >= 0; j--) {
 		for (int i = 0; i < nx; i++) {
 			float u = (float)i / (float)nx;
