@@ -99,7 +99,8 @@ namespace IMGUI_STB_NAMESPACE
 #define STBTT_STATIC
 #define STB_TRUETYPE_IMPLEMENTATION
 #else
-#define STBTT_DEF extern
+#define STBTT_DEF 
+
 #endif
 #include "stb_truetype.h"
 
